@@ -1,12 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { WormholeEvmIntegrationDemo } from "../target/types/wormhole_evm_integration_demo";
+import { SvmEvmDemo } from "../target/types/svm_evm_demo";
 
-describe("wormhole-evm-integration-demo", () => {
+describe("svm-evm-demo", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
-  const program = anchor.workspace.wormholeEvmIntegrationDemo as Program<WormholeEvmIntegrationDemo>;
+  const program = anchor.workspace.svmEvmDemo as Program<SvmEvmDemo>;
 
   it("Is initialized!", async () => {
     // Add your test here.

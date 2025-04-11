@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-wormhole_evm_integration_demo = "HWC8rX3JtVTGyXvtAbyh3TjEi4A7JEUoZtq2tSbVNmho"
+svm_evm_demo = "AhVz6ghP4teVCftLYc5hjz2949ussVFmV6W7SLe7K9Nx"
 
 [registry]
 url = "https://api.apr.dev"
