@@ -917,7 +917,7 @@
     "@aptos-labs/ts-sdk" "^1.33.1"
     "@wormhole-foundation/sdk-connect" "1.14.2"
 
-"@wormhole-foundation/sdk-base@1.14.2":
+"@wormhole-foundation/sdk-base@1.14.2", "@wormhole-foundation/sdk-base@^1.14.2":
   version "1.14.2"
   resolved "https://registry.npmjs.org/@wormhole-foundation/sdk-base/-/sdk-base-1.14.2.tgz"
   integrity sha512-LsLb6YpZ/ucpf23YzXcwVMDITXiI/q96wCx+ZWipFyg6VNmszaT3xo1h04VUxKdgpQrqfYumkoE2PhgV8wDRWA==
@@ -980,7 +980,7 @@
     "@wormhole-foundation/sdk-connect" "1.14.2"
     cosmjs-types "^0.9.0"
 
-"@wormhole-foundation/sdk-definitions@1.14.2":
+"@wormhole-foundation/sdk-definitions@1.14.2", "@wormhole-foundation/sdk-definitions@^1.14.2":
   version "1.14.2"
   resolved "https://registry.npmjs.org/@wormhole-foundation/sdk-definitions/-/sdk-definitions-1.14.2.tgz"
   integrity sha512-2UHHRr/3KgZW9aAa4f53QNIZMMg4RgCWdL2r0WS9gu6RXR+5WiKJ7JMhQ8p3Oye3kp6rNy66CP3kvFVtcbZdGA==
@@ -1029,7 +1029,7 @@
     "@wormhole-foundation/sdk-evm-core" "1.14.2"
     ethers "^6.5.1"
 
-"@wormhole-foundation/sdk-evm-tokenbridge@1.14.2":
+"@wormhole-foundation/sdk-evm-tokenbridge@1.14.2", "@wormhole-foundation/sdk-evm-tokenbridge@^1.14.2":
   version "1.14.2"
   resolved "https://registry.npmjs.org/@wormhole-foundation/sdk-evm-tokenbridge/-/sdk-evm-tokenbridge-1.14.2.tgz"
   integrity sha512-4t8HMsnoK6F07mkgfU/ofABw38FMHEJWTXoGreRsbQxQ3MI8Q42V1niyDQvzCmMV/94IvElIrg24vAL4M0Bomg==
@@ -1039,7 +1039,7 @@
     "@wormhole-foundation/sdk-evm-core" "1.14.2"
     ethers "^6.5.1"
 
-"@wormhole-foundation/sdk-evm@1.14.2":
+"@wormhole-foundation/sdk-evm@1.14.2", "@wormhole-foundation/sdk-evm@^1.14.2":
   version "1.14.2"
   resolved "https://registry.npmjs.org/@wormhole-foundation/sdk-evm/-/sdk-evm-1.14.2.tgz"
   integrity sha512-3gBJxkWe6LOK5VpbNueA18KqrgH1P7iF/6hpD6wct9HGbrSdt/EFVlM9ZkPq+MCGTawHz59XUyvb300ZWuuzNA==
@@ -1690,6 +1690,11 @@ dot-case@^3.0.4:
   dependencies:
     no-case "^3.0.4"
     tslib "^2.0.3"
+
+dotenv@^16.5.0:
+  version "16.5.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.5.0.tgz#092b49f25f808f020050051d1ff258e404c78692"
+  integrity sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==
 
 dunder-proto@^1.0.1:
   version "1.0.1"

@@ -45,6 +45,8 @@ pub mod hello_world {
     ///
     /// * `ctx` - `Initialize` context
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        msg!("Initializing program...");
+
         let config = &mut ctx.accounts.config;
 
         // Set the owner of the config (effectively the owner of the program).

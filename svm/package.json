@@ -6,7 +6,12 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.0",
-    "@wormhole-foundation/sdk": "^1.14.2"
+    "@wormhole-foundation/sdk": "^1.14.2",
+    "@wormhole-foundation/sdk-base": "^1.14.2",
+    "@wormhole-foundation/sdk-definitions": "^1.14.2",
+    "@wormhole-foundation/sdk-evm": "^1.14.2",
+    "@wormhole-foundation/sdk-evm-tokenbridge": "^1.14.2",
+    "dotenv": "^16.5.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
