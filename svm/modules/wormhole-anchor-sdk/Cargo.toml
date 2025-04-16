@@ -9,7 +9,7 @@ homepage = "https://github.com/wormhole-foundation/wormhole-scaffolding"
 repository = "https://github.com/wormhole-foundation/wormhole-scaffolding"
 
 [features]
-default = ["mainnet"]
+default = ["solana-devnet"]
 mainnet = []
 solana-devnet = []
 tilt-devnet = []

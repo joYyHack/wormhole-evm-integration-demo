@@ -6,14 +6,30 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-svm_evm_demo = "AhVz6ghP4teVCftLYc5hjz2949ussVFmV6W7SLe7K9Nx"
+svm_evm_demo = "Fh1woktmFzMrp8mZcs96kH3u5UhhHY349pXmzqWQfseF"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/svm-evm-demo.ts"
+
+
+# [test.validator]
+# url = "https://api.mainnet-beta.solana.com"
+
+# ### MPL Token Metadata
+# [[test.validator.clone]]
+# address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+
+# ### Wormhole Core Bridge          
+# [[test.validator.clone]]
+# address = "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth"
+
+# ### Wormhole Token Bridge
+# [[test.validator.clone]]
+# address = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
