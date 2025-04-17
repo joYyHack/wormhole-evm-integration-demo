@@ -13,9 +13,8 @@ pub mod state;
 declare_id!("Fh1woktmFzMrp8mZcs96kH3u5UhhHY349pXmzqWQfseF");
 
 #[program]
-/// # Hello World (Scaffolding Example #1)
 ///
-/// A Cross-Chain Hello World application. This contract uses Wormhole's
+/// A Cross-Chain application. This contract uses Wormhole's
 /// generic messaging to send an arbitrary message to registered emitters on
 /// foreign networks.
 ///
@@ -30,7 +29,7 @@ declare_id!("Fh1woktmFzMrp8mZcs96kH3u5UhhHY349pXmzqWQfseF");
 /// * [ForeignEmitter]
 /// * [Received]
 /// * [WormholeEmitter]
-pub mod hello_world {
+pub mod wh_messenger {
     use super::*;
     use anchor_lang::solana_program;
     use wormhole_anchor_sdk::wormhole;
@@ -134,8 +133,8 @@ pub mod hello_world {
             // emits, he can deserialize it to find the program with which
             // the emitter PDA was derived.
             let mut payload: Vec<u8> = Vec::new();
-            HelloWorldMessage::serialize(
-                &HelloWorldMessage::Alive {
+            WhMessage::serialize(
+                &WhMessage::Alive {
                     program_id: *ctx.program_id,
                 },
                 &mut payload,
@@ -193,7 +192,7 @@ pub mod hello_world {
         // Solana Wormhole program's. And cannot register a zero address.
         require!(
             chain > 0 && chain != wormhole::CHAIN_ID_SOLANA && !address.iter().all(|&x| x == 0),
-            HelloWorldError::InvalidForeignEmitter,
+            WhMessengerError::InvalidForeignEmitter,
         );
 
         // Save the emitter info into the ForeignEmitter account.
@@ -207,13 +206,13 @@ pub mod hello_world {
 
     /// This instruction posts a Wormhole message of some arbitrary size
     /// in the form of bytes ([Vec<u8>]). The message is encoded as
-    /// [HelloWorldMessage::Hello], which serializes a payload ID (1) before the message
+    /// [WhMessage::Hello], which serializes a payload ID (1) before the message
     /// specified in the instruction. Instead of using the native borsh
     /// serialization of [Vec] length (little endian u32), length of the
     /// message is encoded as big endian u16 (in EVM, bytes for numerics are
     /// natively serialized as big endian).
     ///
-    /// See [HelloWorldMessage] enum for serialization implementation.
+    /// See [WhMessage] enum for serialization implementation.
     ///
     /// # Arguments
     ///
@@ -258,7 +257,7 @@ pub mod hello_world {
 
         // There is only one type of message that this example uses to
         // communicate with its foreign counterparts (payload ID == 1).
-        let payload: Vec<u8> = HelloWorldMessage::Hello { message }.try_to_vec()?;
+        let payload: Vec<u8> = WhMessage::Hello { message }.try_to_vec()?;
 
         wormhole::post_message(
             CpiContext::new_with_signer(
@@ -293,10 +292,10 @@ pub mod hello_world {
     }
 
     /// This instruction reads a posted verified Wormhole message and verifies
-    /// that the payload is of type [HelloWorldMessage::Hello] (payload ID == 1). HelloWorldMessage
+    /// that the payload is of type [WhMessage::Hello] (payload ID == 1). WhMessage
     /// data is stored in a [Received] account.
     ///
-    /// See [HelloWorldMessage] enum for deserialization implementation.
+    /// See [WhMessage] enum for deserialization implementation.
     ///
     /// # Arguments
     ///
@@ -304,11 +303,11 @@ pub mod hello_world {
     pub fn receive_message(ctx: Context<ReceiveMessage>, vaa_hash: [u8; 32]) -> Result<()> {
         let posted_message = &ctx.accounts.posted;
 
-        if let HelloWorldMessage::Hello { message } = posted_message.data() {
+        if let WhMessage::Hello { message } = posted_message.data() {
             // HelloWorldMessage cannot be larger than the maximum size of the account.
             require!(
                 message.len() <= MESSAGE_MAX_LENGTH,
-                HelloWorldError::InvalidMessage,
+                WhMessengerError::InvalidMessage,
             );
 
             // Save batch ID, keccak256 hash and message payload.
@@ -320,7 +319,7 @@ pub mod hello_world {
             // Done
             Ok(())
         } else {
-            Err(HelloWorldError::InvalidMessage.into())
+            Err(WhMessengerError::InvalidMessage.into())
         }
     }
 }

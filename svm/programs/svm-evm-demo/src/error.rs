@@ -2,7 +2,7 @@ use anchor_lang::prelude::error_code;
 
 #[error_code]
 /// Errors relevant to this program's malfunction.
-pub enum HelloWorldError {
+pub enum WhMessengerError {
     #[msg("InvalidWormholeConfig")]
     /// Specified Wormhole bridge data PDA is wrong.
     InvalidWormholeConfig,

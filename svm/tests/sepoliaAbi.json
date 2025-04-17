@@ -14,6 +14,39 @@
       "type": "constructor"
     },
     {
+      "inputs": [
+        { "internalType": "uint256", "name": "offset", "type": "uint256" },
+        { "internalType": "uint256", "name": "length", "type": "uint256" }
+      ],
+      "name": "OutOfBounds",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "hash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "sender",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "name": "MessageReceived",
+      "type": "event"
+    },
+    {
       "inputs": [],
       "name": "chainId",
       "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
@@ -31,7 +64,7 @@
             { "internalType": "uint8", "name": "payloadID", "type": "uint8" },
             { "internalType": "string", "name": "message", "type": "string" }
           ],
-          "internalType": "struct HelloWorldStructs.HelloWorldMessage",
+          "internalType": "struct WhStructs.Message",
           "name": "parsedMessage",
           "type": "tuple"
         }
@@ -46,7 +79,7 @@
             { "internalType": "uint8", "name": "payloadID", "type": "uint8" },
             { "internalType": "string", "name": "message", "type": "string" }
           ],
-          "internalType": "struct HelloWorldStructs.HelloWorldMessage",
+          "internalType": "struct WhStructs.Message",
           "name": "parsedMessage",
           "type": "tuple"
         }
@@ -121,11 +154,7 @@
     },
     {
       "inputs": [
-        {
-          "internalType": "string",
-          "name": "helloWorldMessage",
-          "type": "string"
-        }
+        { "internalType": "string", "name": "message", "type": "string" }
       ],
       "name": "sendMessage",
       "outputs": [

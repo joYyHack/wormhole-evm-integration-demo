@@ -19,7 +19,7 @@ import sepoliaAbi from "./sepoliaAbi.json";
 import { PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import { coreBridge } from "@wormhole-foundation/sdk-base/contracts";
 import { utils } from "@wormhole-foundation/sdk-solana-core";
-import { HelloWorld } from "../target/types/hello_world";
+import { WhMessenger } from "../target/types/wh_messenger";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -27,7 +27,7 @@ dotenv.config();
 describe("send message", () => {
   it.skip("initialize", async () => {
     setProvider(AnchorProvider.env());
-    const program = workspace.HelloWorld as Program<HelloWorld>;
+    const whSolanaMessenger = workspace.WhMessenger as Program<WhMessenger>;
     const wormholeCore = coreBridge("Testnet", "Solana");
 
     // const guardiands = Buffer.from(
@@ -52,7 +52,7 @@ describe("send message", () => {
 
     let configPDA = PublicKey.findProgramAddressSync(
       [Buffer.from("config")],
-      program.programId
+      whSolanaMessenger.programId
     );
 
     let wormholeMessagePda = PublicKey.findProgramAddressSync(
@@ -63,19 +63,18 @@ describe("send message", () => {
           buf.writeBigUInt64LE(BigInt(1));
           return buf;
         })(),
-      ], // Initial sequence
-      program.programId
+      ],
+      whSolanaMessenger.programId
     );
 
     const wormholeAccounts = utils.getPostMessageAccounts(
       wormholeCore,
       getProvider().publicKey,
-      wormholeMessagePda,
-      program.programId
+      wormholeMessagePda[0],
+      whSolanaMessenger.programId
     );
 
-    console.log(program.programId);
-    await program.methods
+    await whSolanaMessenger.methods
       .initialize()
       .accounts({
         owner: getProvider().publicKey,
@@ -86,19 +85,12 @@ describe("send message", () => {
         wormholeFeeCollector: wormholeAccounts.feeCollector,
         wormholeEmitter: wormholeAccounts.emitter,
         wormholeSequence: wormholeAccounts.sequence,
-        wormholeMessage: new PublicKey(
-          "3R7ccY97BuHXy3piYZiRKc32cEk5XwHubYKatismas61"
-        ),
+        wormholeMessage: wormholeAccounts.message,
         clock: wormholeAccounts.clock,
         rent: wormholeAccounts.rent,
         systemProgram: wormholeAccounts.systemProgram,
       })
-      .rpc()
-      .catch((e) => {
-        console.log("error", e);
-        console.log("failed");
-        return;
-      });
+      .rpc();
 
     console.log("finish");
   });
@@ -106,7 +98,7 @@ describe("send message", () => {
   it("send message", async () => {
     setProvider(AnchorProvider.env());
 
-    const whSolanaMessenger = workspace.HelloWorld as Program<HelloWorld>;
+    const whSolanaMessenger = workspace.HelloWorld as Program<WhMessenger>;
 
     const solanaProvider = getProvider();
     const solanaPayer = solanaProvider.wallet.payer;

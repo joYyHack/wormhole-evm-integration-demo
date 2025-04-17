@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 use wormhole_anchor_sdk::wormhole::{self, program::Wormhole};
 
 use crate::{
-    error::HelloWorldError,
-    message::HelloWorldMessage,
+    error::WhMessengerError,
+    message::WhMessage,
     state::{Config, ForeignEmitter, Received, WormholeEmitter},
 };
 
@@ -115,7 +115,7 @@ pub struct RegisterEmitter<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        has_one = owner @ HelloWorldError::OwnerOnly,
+        has_one = owner @ WhMessengerError::OwnerOnly,
         seeds = [Config::SEED_PREFIX],
         bump
     )]
@@ -161,7 +161,7 @@ pub struct SendMessage<'info> {
 
     #[account(
         mut,
-        address = config.wormhole.bridge @ HelloWorldError::InvalidWormholeConfig
+        address = config.wormhole.bridge @ WhMessengerError::InvalidWormholeConfig
     )]
     /// Wormhole bridge data. [`wormhole::post_message`] requires this account
     /// be mutable.
@@ -169,7 +169,7 @@ pub struct SendMessage<'info> {
 
     #[account(
         mut,
-        address = config.wormhole.fee_collector @ HelloWorldError::InvalidWormholeFeeCollector
+        address = config.wormhole.fee_collector @ WhMessengerError::InvalidWormholeFeeCollector
     )]
     /// Wormhole fee collector. [`wormhole::post_message`] requires this
     /// account be mutable.
@@ -184,7 +184,7 @@ pub struct SendMessage<'info> {
 
     #[account(
         mut,
-        address = config.wormhole.sequence @ HelloWorldError::InvalidWormholeSequence
+        address = config.wormhole.sequence @ WhMessengerError::InvalidWormholeSequence
     )]
     /// Emitter's sequence account. [`wormhole::post_message`] requires this
     /// account be mutable.
@@ -212,7 +212,7 @@ pub struct SendMessage<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-type HelloWorldVaa = wormhole::PostedVaa<HelloWorldMessage>;
+type MessageVaa = wormhole::PostedVaa<WhMessage>;
 
 #[derive(Accounts)]
 #[instruction(vaa_hash: [u8; 32])]
@@ -242,7 +242,7 @@ pub struct ReceiveMessage<'info> {
     )]
     /// Verified Wormhole message account. The Wormhole program verified
     /// signatures and posted the account data here. Read-only.
-    pub posted: Account<'info, HelloWorldVaa>,
+    pub posted: Account<'info, MessageVaa>,
 
     #[account(
         seeds = [
@@ -250,7 +250,7 @@ pub struct ReceiveMessage<'info> {
             &posted.emitter_chain().to_le_bytes()[..]
         ],
         bump,
-        constraint = foreign_emitter.verify(posted.emitter_address()) @ HelloWorldError::InvalidForeignEmitter
+        constraint = foreign_emitter.verify(posted.emitter_address()) @ WhMessengerError::InvalidForeignEmitter
     )]
     /// Foreign emitter account. The posted message's `emitter_address` must
     /// agree with the one we have registered for this message's `emitter_chain`
