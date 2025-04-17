@@ -1,1 +1,1 @@
-forge script script/WhMessanger.s.sol:WhMessangerScript --broadcast --verify -vvvv
+forge script script/WhMessenger.s.sol:WhMessengerScript --broadcast --verify -vvvv

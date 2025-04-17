@@ -12,7 +12,7 @@ import "./WhMessages.sol";
  * @notice This contract uses Wormhole's generic-messaging to send/receive an arbitrary
  * message to/from registered emitters on foreign blockchains
  */
-contract WhMessanger is WhGetters, WhMessages {
+contract WhMessenger is WhGetters, WhMessages {
     using BytesParsing for bytes;
 
     event MessageReceived(

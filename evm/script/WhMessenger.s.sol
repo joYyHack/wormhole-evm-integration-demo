@@ -5,11 +5,11 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
 import {IWormhole} from "wormhole/interfaces/IWormhole.sol";
-import {WhMessanger} from "src/Wh.sol";
+import {WhMessenger} from "src/Wh.sol";
 
-contract WhMessangerScript is Script {
+contract WhMessengerScript is Script {
     IWormhole wormhole;
-    WhMessanger whMessanger;
+    WhMessenger whMessenger;
 
     function setUp() public {
         wormhole = IWormhole(vm.envAddress("WORMHOLE_ADDRESS"));
@@ -18,9 +18,9 @@ contract WhMessangerScript is Script {
         );
     }
 
-    function deployWhMessanger() public {
-        // deploy the WhMessanger contract
-        whMessanger = new WhMessanger(
+    function deployWhMessenger() public {
+        // deploy the WhMessenger contract
+        whMessenger = new WhMessenger(
             address(wormhole),
             wormhole.chainId(),
             1 // wormholeFinality
@@ -32,7 +32,7 @@ contract WhMessangerScript is Script {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
         // Wh.sol
-        deployWhMessanger();
+        deployWhMessenger();
 
         // finished
         vm.stopBroadcast();
