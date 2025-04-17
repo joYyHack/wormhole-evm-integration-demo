@@ -142,7 +142,7 @@ describe("send message", () => {
     const program = workspace.HelloWorld as Program<HelloWorld>;
     const wormholeCore = coreBridge("Testnet", "Solana");
 
-    const helloMessage = Buffer.from("Jesjo raz proverjajem");
+    const helloMessage = Buffer.from("Hello world");
 
     // save message count to grab posted message later
     let { sequence } = await utils.getProgramSequenceTracker(
@@ -180,6 +180,7 @@ describe("send message", () => {
     const tx = await program.methods
       .sendMessage(helloMessage)
       .accounts({
+        //@ts-ignore
         config: configPDA,
         wormholeProgram: wormholeCore,
         wormholeBridge: wormholeAccounts.bridge,
@@ -187,7 +188,7 @@ describe("send message", () => {
         wormholeEmitter: wormholeAccounts.emitter,
         wormholeSequence: wormholeAccounts.sequence,
         wormholeMessage: new PublicKey(
-          "DnfFSwRjKeDfYK1QEkdXFZ7oiLXnFaKbWF7MjJ7DsQ4G"
+          "Gogm5jazmH1i37ZvLcAtwrUB9JXw1Bhm7UFih4APV7HN"
         ),
         clock: wormholeAccounts.clock,
         rent: wormholeAccounts.rent,
@@ -218,17 +219,21 @@ describe("send message", () => {
 
     // Create a contract
     const receiver = new Contract(
-      "0x879b6588a168b15bb32f166337b2d7f71d238475",
+      //"0x879b6588a168b15bb32f166337b2d7f71d238475",
+      "0x22aac6f859730b01317815ce78daa650a37f50a2",
       sepoliaAbi.abi,
       owner
     );
 
-    // const tx1Sep = await receiver.registerEmitter(
-    //   chainToChainId("Solana"),
-    //   new UniversalAddress(wormholeCore, "base58").toString()
-    // );
+    const tx1Sep = await receiver.registerEmitter(
+      chainToChainId("Solana"),
+      new UniversalAddress(
+        wormholeAccounts.emitter.toBase58(),
+        "base58"
+      ).toString()
+    );
 
-    // const tx1Receipt = await tx1Sep.wait();
+    await tx1Sep.wait();
 
     const tx2Sep = await receiver.receiveMessage(serialize(vaa));
     await tx2Sep.wait();
