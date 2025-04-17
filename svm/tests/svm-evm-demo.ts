@@ -98,7 +98,7 @@ describe("send message", () => {
   it("send message", async () => {
     setProvider(AnchorProvider.env());
 
-    const whSolanaMessenger = workspace.HelloWorld as Program<WhMessenger>;
+    const whSolanaMessenger = workspace.WhMessenger as Program<WhMessenger>;
 
     const solanaProvider = getProvider();
     const solanaPayer = solanaProvider.wallet.payer;
