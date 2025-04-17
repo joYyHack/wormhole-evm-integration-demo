@@ -3,13 +3,7 @@
 // configured from the workspace's Anchor.toml.
 
 import * as anchor from "@coral-xyz/anchor";
-import {
-  AnchorProvider,
-  getProvider,
-  Program,
-  setProvider,
-  workspace,
-} from "@coral-xyz/anchor";
+import { Program, workspace } from "@coral-xyz/anchor";
 import {
   chainToChainId,
   serialize,
@@ -19,10 +13,9 @@ import {
 import evm from "@wormhole-foundation/sdk/evm";
 import solana from "@wormhole-foundation/sdk/solana";
 import { Contract, ethers, randomBytes, Wallet } from "ethers";
-import sepoliaAbi from "./sepoliaAbi.json";
+import whMessengerEvmAbi from "./whMessengerEvmAbi.json";
 
 import { PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
-import { coreBridge } from "@wormhole-foundation/sdk-base/contracts";
 import { utils } from "@wormhole-foundation/sdk-solana-core";
 import { WhMessenger } from "../target/types/wh_messenger";
 
@@ -113,7 +106,7 @@ module.exports = async function (provider: anchor.AnchorProvider) {
   // Create a contract
   const whSepoliaMessenger = new Contract(
     "0x800864d06d3f3ab2fbbff9eb17b60eeac22d7e37",
-    sepoliaAbi.abi,
+    whMessengerEvmAbi.abi,
     owner
   );
 
