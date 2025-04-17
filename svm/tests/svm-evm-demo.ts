@@ -79,6 +79,7 @@ describe("send message", () => {
       .initialize()
       .accounts({
         owner: getProvider().publicKey,
+        // @ts-ignore
         config: configPDA,
         wormholeProgram: wormholeCore,
         wormholeBridge: wormholeAccounts.bridge,
