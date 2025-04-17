@@ -1,2 +1,1 @@
-anchor deploy
-anchor test
+anchor migrate
