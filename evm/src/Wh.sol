@@ -15,6 +15,17 @@ import "./WhMessages.sol";
 contract WhMessanger is WhGetters, WhMessages {
     using BytesParsing for bytes;
 
+    event MessageReceived(
+        bytes32 indexed hash,
+        bytes32 indexed sender,
+        string message
+    );
+
+    modifier onlyOwner() {
+        require(owner() == msg.sender, "caller not the owner");
+        _;
+    }
+
     /**
      * @notice Deploys the smart contract and sanity checks initial deployment values
      * @dev Sets the owner, wormhole, chainId and wormholeFinality state variables.
@@ -119,6 +130,12 @@ contract WhMessanger is WhGetters, WhMessages {
         );
 
         consumeMessage(wormholeMessage.hash, parsedMessage.message);
+
+        emit MessageReceived(
+            wormholeMessage.hash,
+            wormholeMessage.emitterAddress,
+            parsedMessage.message
+        );
     }
 
     /**
@@ -152,10 +169,5 @@ contract WhMessanger is WhGetters, WhMessages {
     ) internal view returns (bool) {
         // Verify that the sender of the Wormhole message is a trusted contract.
         return getRegisteredEmitter(vm.emitterChainId) == vm.emitterAddress;
-    }
-
-    modifier onlyOwner() {
-        require(owner() == msg.sender, "caller not the owner");
-        _;
     }
 }
