@@ -12,7 +12,10 @@ contract WhMessangerScript is Script {
     WhMessanger whMessanger;
 
     function setUp() public {
-        wormhole = IWormhole(0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78);
+        wormhole = IWormhole(vm.envAddress("WORMHOLE_ADDRESS"));
+        vm.createSelectFork(
+            StdChains.getChain(vm.envString("CHAIN_NAME")).rpcUrl
+        );
     }
 
     function deployWhMessanger() public {
@@ -26,7 +29,7 @@ contract WhMessangerScript is Script {
 
     function run() public {
         // begin sending transactions
-        vm.startBroadcast();
+        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
         // Wh.sol
         deployWhMessanger();
