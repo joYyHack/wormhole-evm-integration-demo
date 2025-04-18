@@ -29,7 +29,7 @@ contract WhMessengerScript is Script {
 
     function run() public {
         // begin sending transactions
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        vm.startBroadcast(vm.envUint("EVM_PRIVATE_KEY"));
 
         // Wh.sol
         deployWhMessenger();

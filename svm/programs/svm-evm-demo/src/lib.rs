@@ -10,7 +10,7 @@ pub mod error;
 pub mod message;
 pub mod state;
 
-declare_id!("Fh1woktmFzMrp8mZcs96kH3u5UhhHY349pXmzqWQfseF");
+declare_id!("GxkhaXFeosEwsZMp9Gb2idd4rC4EFUffGJYWzb19xR1R");
 
 #[program]
 ///

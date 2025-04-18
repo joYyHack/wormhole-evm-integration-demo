@@ -99,8 +99,8 @@ module.exports = async function (provider: anchor.AnchorProvider) {
   const vaa = await wh.getVaa(whm!, "Uint8Array", 60_000);
 
   const owner = new Wallet(
-    process.env.PRIVATE_KEY,
-    new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL)
+    process.env.EVM_PRIVATE_KEY,
+    new ethers.JsonRpcProvider(process.env.EVM_RPC_URL)
   );
 
   // Create a contract

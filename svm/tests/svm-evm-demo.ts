@@ -25,7 +25,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 describe("send message", () => {
-  it.skip("initialize", async () => {
+  it("initialize", async () => {
     setProvider(AnchorProvider.env());
     const whSolanaMessenger = workspace.WhMessenger as Program<WhMessenger>;
     const wormholeCore = coreBridge("Testnet", "Solana");
@@ -169,8 +169,8 @@ describe("send message", () => {
     const vaa = await wh.getVaa(whm!, "Uint8Array", 60_000);
 
     const owner = new Wallet(
-      process.env.PRIVATE_KEY,
-      new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL)
+      process.env.EVM_PRIVATE_KEY,
+      new ethers.JsonRpcProvider(process.env.EVM_RPC_URL)
     );
 
     // Create a contract
