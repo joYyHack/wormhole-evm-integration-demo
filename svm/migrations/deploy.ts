@@ -13,7 +13,7 @@ import {
 import evm from "@wormhole-foundation/sdk/evm";
 import solana from "@wormhole-foundation/sdk/solana";
 import { Contract, ethers, randomBytes, Wallet } from "ethers";
-import whMessengerEvmAbi from "./whMessengerEvmAbi.json";
+import whEVMMessengerAbi from "@evm/out/WhMessenger.s.sol/WhMessengerScript.json";
 
 import { PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import { utils } from "@wormhole-foundation/sdk-solana-core";
@@ -106,7 +106,7 @@ module.exports = async function (provider: anchor.AnchorProvider) {
   // Create a contract
   const whSepoliaMessenger = new Contract(
     "0x800864d06d3f3ab2fbbff9eb17b60eeac22d7e37",
-    whMessengerEvmAbi.abi,
+    whEVMMessengerAbi.abi,
     owner
   );
 
