@@ -99,7 +99,7 @@ async function initialize() {
       rent: wormholeAccounts.rent,
       systemProgram: wormholeAccounts.systemProgram,
     })
-    .rpc({ commitment: "processed" });
+    .rpc({ commitment: "confirmed" });
 
   console.log("Initalized");
 }
@@ -223,5 +223,13 @@ async function sendMessage() {
 module.exports = async function (provider: anchor.AnchorProvider) {
   setup(provider);
   await initialize();
+
+  console.log("Waiting for 3 seconds...");
+  await sleep(3000);
+
   await sendMessage();
 };
+
+function sleep(ms: number) {
+  return new Promise((_) => setTimeout(_, ms));
+}
