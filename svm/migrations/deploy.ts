@@ -3,7 +3,12 @@
 // configured from the workspace's Anchor.toml.
 
 import * as anchor from "@coral-xyz/anchor";
-import { Program, workspace } from "@coral-xyz/anchor";
+import {
+  AnchorProvider,
+  Program,
+  setProvider,
+  workspace,
+} from "@coral-xyz/anchor";
 import {
   chainToChainId,
   serialize,
@@ -13,34 +18,100 @@ import {
 import evm from "@wormhole-foundation/sdk/evm";
 import solana from "@wormhole-foundation/sdk/solana";
 import { Contract, ethers, randomBytes, Wallet } from "ethers";
-import whEVMMessengerAbi from "@evm/out/WhMessenger.s.sol/WhMessengerScript.json";
+import whEVMMessengerAbi from "../../evm/out/Wh.sol/WhMessenger.json";
 
-import { PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
+import { Keypair, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import { utils } from "@wormhole-foundation/sdk-solana-core";
 import { WhMessenger } from "../target/types/wh_messenger";
 
 import * as dotenv from "dotenv";
+import { coreBridge } from "@wormhole-foundation/sdk-base/contracts";
 dotenv.config();
 
-module.exports = async function (provider: anchor.AnchorProvider) {
-  // Configure client to use the provider.
-  anchor.setProvider(provider);
-  // Add your deploy script here.
+const ENV = "Testnet";
+const SOLANA = "Solana";
 
-  const whSolanaMessenger = workspace.HelloWorld as Program<WhMessenger>;
+let whSolanaMessenger: Program<WhMessenger>;
+let wormholeCoreAddress: string;
+let solanaProvider: AnchorProvider;
+let solanaPayer: Keypair;
 
-  // const solanaProvider = getProvider();
-  const solanaPayer = provider.wallet.payer;
+function setup(provider: anchor.AnchorProvider) {
+  setProvider(provider);
+  solanaProvider = provider;
+  solanaPayer = solanaProvider.wallet.payer;
 
-  const wh = await wormhole("Testnet", [solana, evm]);
-  const solanaChain = wh.getChain("Solana");
-  const wormholeCoreAddress = solanaChain.config.contracts.coreBridge;
+  whSolanaMessenger = workspace.WhMessenger as Program<WhMessenger>;
+  wormholeCoreAddress = coreBridge(ENV, SOLANA);
+}
+
+async function initialize() {
+  console.log("Initializing...");
+
+  let configPDA = PublicKey.findProgramAddressSync(
+    [Buffer.from("config")],
+    whSolanaMessenger.programId
+  );
+
+  if (
+    (await whSolanaMessenger.account.config.getAccountInfo(configPDA[0])) !==
+      null &&
+    (
+      await whSolanaMessenger.account.config.fetch(configPDA[0])
+    ).owner.toBase58() === solanaProvider.publicKey.toBase58()
+  ) {
+    console.log("Already initialized");
+    return;
+  }
+
+  let wormholeMessagePda = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("sent"),
+      (() => {
+        const buf = Buffer.alloc(8);
+        buf.writeBigUInt64LE(BigInt(1));
+        return buf;
+      })(),
+    ],
+    whSolanaMessenger.programId
+  );
+
+  const wormholeAccounts = utils.getPostMessageAccounts(
+    wormholeCoreAddress,
+    solanaProvider.publicKey,
+    wormholeMessagePda[0],
+    whSolanaMessenger.programId
+  );
+
+  await whSolanaMessenger.methods
+    .initialize()
+    .accounts({
+      owner: solanaProvider.publicKey,
+      // @ts-ignore
+      config: configPDA,
+      wormholeProgram: wormholeCoreAddress,
+      wormholeBridge: wormholeAccounts.bridge,
+      wormholeFeeCollector: wormholeAccounts.feeCollector,
+      wormholeEmitter: wormholeAccounts.emitter,
+      wormholeSequence: wormholeAccounts.sequence,
+      wormholeMessage: wormholeAccounts.message,
+      clock: wormholeAccounts.clock,
+      rent: wormholeAccounts.rent,
+      systemProgram: wormholeAccounts.systemProgram,
+    })
+    .rpc({ commitment: "processed" });
+
+  console.log("Initalized");
+}
+
+async function sendMessage() {
+  const wh = await wormhole(ENV, [solana, evm]);
+  const solanaChain = wh.getChain(SOLANA);
 
   const message = Buffer.from("Hello world: " + randomBytes(6).toString());
 
-  // save message count to grab posted message later
   let { sequence } = await utils.getProgramSequenceTracker(
-    provider.connection,
+    solanaProvider.connection,
     whSolanaMessenger.programId,
     wormholeCoreAddress
   );
@@ -66,10 +137,12 @@ module.exports = async function (provider: anchor.AnchorProvider) {
 
   const wormholeAccounts = utils.getPostMessageAccounts(
     wormholeCoreAddress,
-    provider.publicKey,
+    solanaProvider.publicKey,
     wormholeMessagePda[0],
     whSolanaMessenger.programId
   );
+
+  console.log("Sending message...");
 
   const tx = await whSolanaMessenger.methods
     .sendMessage(message)
@@ -89,30 +162,36 @@ module.exports = async function (provider: anchor.AnchorProvider) {
     .transaction();
 
   const txSig = await sendAndConfirmTransaction(
-    provider.connection,
+    solanaProvider.connection,
     tx,
     [solanaPayer],
     { commitment: "processed" }
   );
 
+  console.log("Message sent");
+
   const [whm] = await solanaChain.parseTransaction(txSig);
   const vaa = await wh.getVaa(whm!, "Uint8Array", 60_000);
 
-  const owner = new Wallet(
-    process.env.EVM_PRIVATE_KEY,
-    new ethers.JsonRpcProvider(process.env.EVM_RPC_URL)
-  );
+  const evmProvider = new ethers.JsonRpcProvider(process.env.EVM_RPC_URL);
 
-  // Create a contract
-  const whSepoliaMessenger = new Contract(
-    "0x800864d06d3f3ab2fbbff9eb17b60eeac22d7e37",
+  const owner = new Wallet(process.env.EVM_PRIVATE_KEY, evmProvider);
+
+  const pathToDeployment = `../../evm/broadcast/WhMessenger.s.sol/${
+    (await evmProvider.getNetwork()).chainId
+  }/run-latest.json`;
+
+  const deploymentTx = (await import(pathToDeployment)).transactions[0];
+
+  const whEVMMessenger = new Contract(
+    deploymentTx.contractAddress,
     whEVMMessengerAbi.abi,
     owner
   );
 
   // Check if the emitter is already registered
-  const emitterAddress = await whSepoliaMessenger.getRegisteredEmitter(
-    chainToChainId("Solana")
+  const emitterAddress = await whEVMMessenger.getRegisteredEmitter(
+    chainToChainId(SOLANA)
   );
 
   const universalEmitterAddress = new UniversalAddress(
@@ -121,18 +200,28 @@ module.exports = async function (provider: anchor.AnchorProvider) {
   ).toString();
 
   if (emitterAddress !== universalEmitterAddress) {
-    console.log("Registering emitter");
+    console.log("Registering emitter...");
 
-    const tx = await whSepoliaMessenger.registerEmitter(
-      chainToChainId("Solana"),
+    const tx = await whEVMMessenger.registerEmitter(
+      chainToChainId(SOLANA),
       universalEmitterAddress
     );
 
     await tx.wait();
+
+    console.log("Emitter registered");
   }
 
-  console.log("Receiving message");
+  console.log("Receiving message...");
 
-  const txSep = await whSepoliaMessenger.receiveMessage(serialize(vaa));
+  const txSep = await whEVMMessenger.receiveMessage(serialize(vaa));
   await txSep.wait();
+
+  console.log("Message received");
+}
+
+module.exports = async function (provider: anchor.AnchorProvider) {
+  setup(provider);
+  await initialize();
+  await sendMessage();
 };
