@@ -19,7 +19,6 @@ contract WhMessengerScript is Script {
     }
 
     function deployWhMessenger() public {
-        // deploy the WhMessenger contract
         whMessenger = new WhMessenger(
             address(wormhole),
             wormhole.chainId(),
@@ -28,13 +27,10 @@ contract WhMessengerScript is Script {
     }
 
     function run() public {
-        // begin sending transactions
         vm.startBroadcast(vm.envUint("EVM_PRIVATE_KEY"));
 
-        // Wh.sol
         deployWhMessenger();
 
-        // finished
         vm.stopBroadcast();
     }
 }

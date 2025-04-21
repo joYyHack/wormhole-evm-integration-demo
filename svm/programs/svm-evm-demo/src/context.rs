@@ -7,16 +7,11 @@ use crate::{
     state::{Config, ForeignEmitter, Received, WormholeEmitter},
 };
 
-/// AKA `b"sent"`.
 pub const SEED_PREFIX_SENT: &[u8; 4] = b"sent";
 
 #[derive(Accounts)]
-/// Context used to initialize program data (i.e. config).
 pub struct Initialize<'info> {
     #[account(mut)]
-    /// Whoever initializes the config will be the owner of the program. Signer
-    /// for creating the [`Config`] account and posting a Wormhole message
-    /// indicating that the program is alive.
     pub owner: Signer<'info>,
 
     #[account(
@@ -27,12 +22,8 @@ pub struct Initialize<'info> {
         space = Config::MAXIMUM_SIZE,
 
     )]
-    /// Config account, which saves program data useful for other instructions.
-    /// Also saves the payer of the [`initialize`](crate::initialize) instruction
-    /// as the program's owner.
     pub config: Account<'info, Config>,
 
-    /// Wormhole program.
     pub wormhole_program: Program<'info, Wormhole>,
 
     #[account(
@@ -41,8 +32,6 @@ pub struct Initialize<'info> {
         bump,
         seeds::program = wormhole_program.key,
     )]
-    /// Wormhole bridge data account (a.k.a. its config).
-    /// [`wormhole::post_message`] requires this account be mutable.
     pub wormhole_bridge: Account<'info, wormhole::BridgeData>,
 
     #[account(
@@ -51,9 +40,6 @@ pub struct Initialize<'info> {
         bump,
         seeds::program = wormhole_program.key
     )]
-    /// Wormhole fee collector account, which requires lamports before the
-    /// program can post a message (if there is a fee).
-    /// [`wormhole::post_message`] requires this account be mutable.
     pub wormhole_fee_collector: Account<'info, wormhole::FeeCollector>,
 
     #[account(
@@ -63,9 +49,6 @@ pub struct Initialize<'info> {
         bump,
         space = WormholeEmitter::MAXIMUM_SIZE
     )]
-    /// This program's emitter account. We create this account in the
-    /// [`initialize`](crate::initialize) instruction, but
-    /// [`wormhole::post_message`] only needs it to be read-only.
     pub wormhole_emitter: Account<'info, WormholeEmitter>,
 
     #[account(
@@ -96,13 +79,10 @@ pub struct Initialize<'info> {
     /// [`wormhole::post_message`] requires this account be mutable.
     pub wormhole_message: UncheckedAccount<'info>,
 
-    /// Clock sysvar.
     pub clock: Sysvar<'info, Clock>,
 
-    /// Rent sysvar.
     pub rent: Sysvar<'info, Rent>,
 
-    /// System program.
     pub system_program: Program<'info, System>,
 }
 
@@ -110,8 +90,6 @@ pub struct Initialize<'info> {
 #[instruction(chain: u16)]
 pub struct RegisterEmitter<'info> {
     #[account(mut)]
-    /// Owner of the program set in the [`Config`] account. Signer for creating
-    /// the [`ForeignEmitter`] account.
     pub owner: Signer<'info>,
 
     #[account(
@@ -119,8 +97,6 @@ pub struct RegisterEmitter<'info> {
         seeds = [Config::SEED_PREFIX],
         bump
     )]
-    /// Config account. This program requires that the `owner` specified in the
-    /// context equals the pubkey specified in this account. Read-only.
     pub config: Account<'info, Config>,
 
     #[account(
@@ -133,61 +109,46 @@ pub struct RegisterEmitter<'info> {
         bump,
         space = ForeignEmitter::MAXIMUM_SIZE
     )]
-    /// Foreign Emitter account. Create this account if an emitter has not been
-    /// registered yet for this Wormhole chain ID. If there already is an
-    /// emitter address saved in this account, overwrite it.
     pub foreign_emitter: Account<'info, ForeignEmitter>,
 
-    /// System program.
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct SendMessage<'info> {
     #[account(mut)]
-    /// Payer will pay Wormhole fee to post a message.
     pub payer: Signer<'info>,
 
     #[account(
         seeds = [Config::SEED_PREFIX],
         bump,
     )]
-    /// Config account. Wormhole PDAs specified in the config are checked
-    /// against the Wormhole accounts in this context. Read-only.
     pub config: Account<'info, Config>,
 
-    /// Wormhole program.
     pub wormhole_program: Program<'info, Wormhole>,
 
     #[account(
         mut,
         address = config.wormhole.bridge @ WhMessengerError::InvalidWormholeConfig
     )]
-    /// Wormhole bridge data. [`wormhole::post_message`] requires this account
-    /// be mutable.
     pub wormhole_bridge: Account<'info, wormhole::BridgeData>,
 
     #[account(
         mut,
         address = config.wormhole.fee_collector @ WhMessengerError::InvalidWormholeFeeCollector
     )]
-    /// Wormhole fee collector. [`wormhole::post_message`] requires this
-    /// account be mutable.
     pub wormhole_fee_collector: Account<'info, wormhole::FeeCollector>,
 
     #[account(
         seeds = [WormholeEmitter::SEED_PREFIX],
         bump,
     )]
-    /// Program's emitter account. Read-only.
     pub wormhole_emitter: Account<'info, WormholeEmitter>,
 
     #[account(
         mut,
         address = config.wormhole.sequence @ WhMessengerError::InvalidWormholeSequence
     )]
-    /// Emitter's sequence account. [`wormhole::post_message`] requires this
-    /// account be mutable.
     pub wormhole_sequence: Account<'info, wormhole::SequenceTracker>,
 
     #[account(
@@ -202,13 +163,10 @@ pub struct SendMessage<'info> {
     /// account be mutable.
     pub wormhole_message: UncheckedAccount<'info>,
 
-    /// System program.
     pub system_program: Program<'info, System>,
 
-    /// Clock sysvar.
     pub clock: Sysvar<'info, Clock>,
 
-    /// Rent sysvar.
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -218,18 +176,14 @@ type MessageVaa = wormhole::PostedVaa<WhMessage>;
 #[instruction(vaa_hash: [u8; 32])]
 pub struct ReceiveMessage<'info> {
     #[account(mut)]
-    /// Payer will initialize an account that tracks his own message IDs.
     pub payer: Signer<'info>,
 
     #[account(
         seeds = [Config::SEED_PREFIX],
         bump,
     )]
-    /// Config account. Wormhole PDAs specified in the config are checked
-    /// against the Wormhole accounts in this context. Read-only.
     pub config: Account<'info, Config>,
 
-    // Wormhole program.
     pub wormhole_program: Program<'info, Wormhole>,
 
     #[account(
@@ -240,8 +194,6 @@ pub struct ReceiveMessage<'info> {
         bump,
         seeds::program = wormhole_program.key
     )]
-    /// Verified Wormhole message account. The Wormhole program verified
-    /// signatures and posted the account data here. Read-only.
     pub posted: Account<'info, MessageVaa>,
 
     #[account(
@@ -252,9 +204,6 @@ pub struct ReceiveMessage<'info> {
         bump,
         constraint = foreign_emitter.verify(posted.emitter_address()) @ WhMessengerError::InvalidForeignEmitter
     )]
-    /// Foreign emitter account. The posted message's `emitter_address` must
-    /// agree with the one we have registered for this message's `emitter_chain`
-    /// (chain ID). Read-only.
     pub foreign_emitter: Account<'info, ForeignEmitter>,
 
     #[account(
@@ -268,12 +217,7 @@ pub struct ReceiveMessage<'info> {
         bump,
         space = Received::MAXIMUM_SIZE
     )]
-    /// Received account. [`receive_message`](crate::receive_message) will
-    /// deserialize the Wormhole message's payload and save it to this account.
-    /// This account cannot be overwritten, and will prevent Wormhole message
-    /// replay with the same sequence.
     pub received: Account<'info, Received>,
 
-    /// System program.
     pub system_program: Program<'info, System>,
 }

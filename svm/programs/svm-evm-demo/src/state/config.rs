@@ -3,11 +3,10 @@ use anchor_lang::prelude::*;
 #[derive(Default, AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
 /// Wormhole program related addresses.
 pub struct WormholeAddresses {
-    /// [BridgeData](wormhole_anchor_sdk::wormhole::BridgeData) address.
     pub bridge: Pubkey,
-    /// [FeeCollector](wormhole_anchor_sdk::wormhole::FeeCollector) address.
+
     pub fee_collector: Pubkey,
-    /// [SequenceTracker](wormhole_anchor_sdk::wormhole::SequenceTracker) address.
+
     pub sequence: Pubkey,
 }
 
@@ -23,12 +22,9 @@ impl WormholeAddresses {
 #[derive(Default)]
 /// Config account data.
 pub struct Config {
-    /// Program's owner.
     pub owner: Pubkey,
-    /// Wormhole program's relevant addresses.
     pub wormhole: WormholeAddresses,
-    /// AKA nonce. Just zero, but saving this information in this account
-    /// anyway.
+    /// AKA nonce. Just zero, but saving this information in this account anyway.
     pub batch_id: u32,
     /// AKA consistency level. u8 representation of Solana's
     /// [Finality](wormhole_anchor_sdk::wormhole::Finality).
@@ -43,6 +39,6 @@ impl Config {
         + 1 // finality
         
     ;
-    /// AKA `b"config"`.
+
     pub const SEED_PREFIX: &'static [u8; 6] = b"config";
 }
