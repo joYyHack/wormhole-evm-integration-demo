@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.0",
+    "@metamask/etherscan-link": "^3.0.0",
     "@wormhole-foundation/sdk": "^1.14.2",
     "@wormhole-foundation/sdk-base": "^1.14.2",
     "@wormhole-foundation/sdk-definitions": "^1.14.2",
