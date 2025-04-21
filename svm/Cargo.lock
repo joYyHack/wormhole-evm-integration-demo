@@ -2556,7 +2556,6 @@ name = "svm-evm-demo"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "solana-program",
  "wormhole-anchor-sdk",
  "wormhole-io",
 ]

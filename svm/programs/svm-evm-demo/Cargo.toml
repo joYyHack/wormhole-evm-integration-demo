@@ -23,5 +23,4 @@ idl-build = ["anchor-lang/idl-build", "wormhole-anchor-sdk/idl-build"]
 [dependencies]
 anchor-lang = { workspace = true }
 wormhole-io = { workspace = true }
-solana-program = "2.2.1"
 wormhole-anchor-sdk = { path = "../../modules/wormhole-anchor-sdk", default-features = false }

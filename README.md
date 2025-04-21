@@ -34,7 +34,7 @@ Before using this repository, ensure you have the following installed:
 
 3. Configure the .env file:
 
-    - Update the values in .env with your Ethereum RPC URL, private key, and Wormhole contract address.
+   - Update the values in .env with your Ethereum RPC URL, private key, and Wormhole contract address.
 
 4. Compile and deploy the contracts:
 
@@ -76,17 +76,21 @@ Before using this repository, ensure you have the following installed:
    ```bash
     anchor test
    ```
-   or 
+
+   or
+
    ```bash
     anchor test --skip-deploy
    ```
+
 ## Notes
 
 - Environment Variables:
 
-    Both the evm and svm directories rely on .env files for configuration. Ensure these files are properly set up before running any commands.
+  Both the evm and svm directories rely on .env files for configuration. Ensure these files are properly set up before running any commands.
 
 ## References
+
 - [Wormhole Scaffolding Repository](https://github.com/wormhole-foundation/wormhole-scaffolding)
 - [Wormhole Documentation](https://wormhole.com)
 - [Anchor Framework Documentation](https://book.anchor-lang.com/)
