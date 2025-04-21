@@ -9,9 +9,7 @@ import { Keypair, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import {
   ChainContext,
   chainToChainId,
-  network,
   serialize,
-  signAndSendWait,
   UniversalAddress,
   Wormhole,
   wormhole,
@@ -27,6 +25,10 @@ import { WhMessenger } from "../target/types/wh_messenger";
 import etherscanLink from "@metamask/etherscan-link";
 import * as dotenv from "dotenv";
 dotenv.config();
+
+// temp fix
+console.warn = () => {};
+console.error = () => {};
 
 describe("send message SVM -> EVM", () => {
   const ENV = "Testnet";
