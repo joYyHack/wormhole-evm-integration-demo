@@ -54,7 +54,7 @@ contract WhMessenger is WhGetters, WhMessages {
         IWormhole wormhole = wormhole();
         uint256 wormholeFee = wormhole.messageFee();
 
-        require(msg.value == wormholeFee, "insufficient value");
+        require(msg.value >= wormholeFee, "insufficient value");
 
         Message memory parsedMessage = Message({
             payloadID: uint8(1),

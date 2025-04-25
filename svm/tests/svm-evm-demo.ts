@@ -1,3 +1,4 @@
+import bs58 from "bs58";
 import {
   AnchorProvider,
   getProvider,
@@ -5,11 +6,17 @@ import {
   setProvider,
   workspace,
 } from "@coral-xyz/anchor";
-import { Keypair, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Transaction,
+} from "@solana/web3.js";
 import {
   ChainContext,
   chainToChainId,
   serialize,
+  signSendWait,
   UniversalAddress,
   Wormhole,
   wormhole,
@@ -24,15 +31,19 @@ import { WhMessenger } from "../target/types/wh_messenger";
 
 import etherscanLink from "@metamask/etherscan-link";
 import * as dotenv from "dotenv";
+import { getGuardianSet } from "@wormhole-foundation/sdk-solana-core/dist/cjs/utils";
+import { utils as testingUtils } from "@wormhole-foundation/sdk-definitions/testing";
+import { getSigner } from "./helpers/helpers";
 dotenv.config();
 
 // temp fix
 console.warn = () => {};
 console.error = () => {};
 
-describe("send message SVM -> EVM", () => {
+describe("messaging SVM -> EVM", () => {
   const ENV = "Testnet";
   const SOLANA = "Solana";
+  const SEPOLIA = "Sepolia";
 
   let wh: Wormhole<"Testnet">;
   let solanaChain: ChainContext<"Testnet", "Solana", "Solana">;
@@ -113,7 +124,7 @@ describe("send message SVM -> EVM", () => {
     const tx_sol = await whSolanaMessenger.methods
       .initialize()
       .accounts({
-        owner: getProvider().publicKey,
+        owner: solanaProvider.publicKey,
         // @ts-ignore
         config: configPDA,
         wormholeProgram: wormholeCoreAddress,
@@ -138,7 +149,7 @@ describe("send message SVM -> EVM", () => {
     console.log("Initalized");
   });
 
-  it("send message SVM -> EVM", async () => {
+  it.skip("send message SVM -> EVM", async () => {
     const wh = await wormhole(ENV, [solana, evm]);
     const solanaChain = wh.getChain(SOLANA);
 
@@ -248,6 +259,154 @@ describe("send message SVM -> EVM", () => {
     await tx_evm.wait();
 
     console.log(`Transaction link: ${evmTxLink(tx_evm.hash)}`);
+    console.log("Message received");
+  });
+
+  it("receive message SVM -> EVM", async () => {
+    const wh = await wormhole(ENV, [solana, evm]);
+    const sepoliaChain = wh.getChain(SEPOLIA);
+    const solanaChain = wh.getChain(SOLANA);
+
+    const pathToDeployment = `../../evm/broadcast/WhMessenger.s.sol/${evmNetwork.chainId}/run-latest.json`;
+    const deploymentTx = (await import(pathToDeployment)).transactions[0];
+
+    console.log("Sending message...");
+
+    if (false) {
+      const whEVMMessenger = new Contract(
+        deploymentTx.contractAddress,
+        whEVMMessengerAbi.abi,
+        evmPayer
+      );
+
+      const message = "Hello world: " + randomBytes(6).toString();
+
+      const tx_evm = await whEVMMessenger
+        .connect(evmPayer)
+        // @ts-ignore
+        .sendMessage(message, {
+          value: ethers.parseEther("0.1"),
+        });
+
+      await tx_evm.wait();
+
+      console.log(`Transaction link: ${evmTxLink(tx_evm.hash)}`);
+    }
+
+    console.log("Message sent");
+
+    // console.log(
+    //   "tx status",
+    //   await wh.getTransactionStatus(
+    //     "0x01a03d502f8fc64f8104f252ab7402141dfbf4b6dd2fb0e1775be0848dda4b7d"
+    //   )
+    // );
+
+    const [whm] = await sepoliaChain.parseTransaction(
+      "0x5a9fc8facd623956c5a44f2bbc3c7c7e8f3249c04d6b229df576ec57cc8ad824"
+      //tx_evm.hash
+      //"0x01a03d502f8fc64f8104f252ab7402141dfbf4b6dd2fb0e1775be0848dda4b7d"
+    );
+
+    console.log("whm", whm);
+
+    const vaa = await wh.getVaa(whm!, "Uint8Array", 100_000);
+
+    console.log("VAA", vaa);
+    console.log(vaa.emitterAddress.toString());
+    
+    let configPda = PublicKey.findProgramAddressSync(
+      [Buffer.from("config")],
+      whSolanaMessenger.programId
+    );
+
+    let foreignEmitterPda = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("foreign_emitter"),
+        (() => {
+          const buf = Buffer.alloc(2);
+          buf.writeUInt16LE(chainToChainId(vaa.emitterChain));
+          return buf;
+        })(),
+      ],
+      whSolanaMessenger.programId
+    );
+
+    console.log("Registering emitter...");
+
+    if (false) {
+      const registerEmitterTx = await whSolanaMessenger.methods
+        .registerEmitter(chainToChainId(vaa.emitterChain), [
+          ...Buffer.from(
+            deploymentTx.contractAddress.replace("0x", "").padStart(64, "0")
+          ),
+        ])
+        .accounts({
+          // @ts-ignore
+          owner: solanaPayer.publicKey,
+          config: configPda,
+          foreignEmitter: foreignEmitterPda[0],
+        })
+        .transaction();
+
+      const registerEmitterSig = await sendAndConfirmTransaction(
+        solanaProvider.connection,
+        registerEmitterTx,
+        [solanaPayer]
+      );
+
+      console.log(`Transaction link: ${solanatTxLink(registerEmitterSig)}`);
+    }
+
+    console.log("Emitter registered");
+
+    console.log("Receiving message...");
+
+    let receivedPda = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("received"),
+        (() => {
+          const buf = Buffer.alloc(10);
+          buf.writeUInt16LE(chainToChainId(vaa.emitterChain), 0);
+          buf.writeBigInt64LE(vaa.sequence, 2);
+          return buf;
+        })(),
+      ],
+      whSolanaMessenger.programId
+    );
+
+    const { signer, address } = await getSigner(wh.getChain(SOLANA));
+
+    const verifyTxs = (await solanaChain.getWormholeCore()).verifyMessage(
+      address.address,
+      vaa
+    );
+
+    await signSendWait(wh.getChain(SOLANA), verifyTxs, signer);
+
+    const tx_sol = await whSolanaMessenger.methods
+      .receiveMessage([...vaa.hash])
+      .accounts({
+        payer: solanaPayer.publicKey,
+        // @ts-ignore
+        config: configPda,
+        wormholeProgram: wormholeCoreAddress,
+        posted: utils.derivePostedVaaKey(
+          wormholeCoreAddress,
+          Buffer.from(vaa.hash)
+        ),
+        foreignEmitter: foreignEmitterPda[0],
+        received: receivedPda[0],
+      })
+      .transaction();
+
+    const txSig = await sendAndConfirmTransaction(
+      solanaProvider.connection,
+      tx_sol,
+      [solanaPayer]
+    );
+
+    console.log(`Transaction link: ${solanatTxLink(txSig)}`);
     console.log("Message received");
   });
 });

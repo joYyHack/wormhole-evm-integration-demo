@@ -1,4 +1,5 @@
 [toolchain]
+anchor_version = "0.31.0"
 package_manager = "yarn"
 
 [features]
@@ -6,7 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-svm_evm_demo = "DkGPzAc7bxs9ZXCk8Q6yYrMXMbukq3eZbj1kNS2y6u2o"
+svm_evm_demo = "3kUKxzuRdsxrekFBAnWNJsANytBZhN58m7CwzirgcQCR"
 
 [registry]
 url = "https://api.apr.dev"
