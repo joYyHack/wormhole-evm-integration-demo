@@ -10,7 +10,7 @@ pub mod error;
 pub mod message;
 pub mod state;
 
-declare_id!("GaBRu5eRcHkanJRmXLvKF9HfhxhuigdhJtdY1qXNGmkf");
+declare_id!("8ytSoUuPamxUoYs8YTkV1tdnhQAHHbyjB3DWJHTVzRBd");
 
 #[program]
 /// A Cross-Chain application. This contract uses Wormhole's
