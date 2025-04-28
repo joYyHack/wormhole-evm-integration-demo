@@ -100,7 +100,7 @@ pub struct RegisterEmitter<'info> {
     pub config: Account<'info, Config>,
 
     #[account(
-        init, // init_if_needed - was here before
+        init_if_needed,
         payer = owner,
         seeds = [
             ForeignEmitter::SEED_PREFIX,

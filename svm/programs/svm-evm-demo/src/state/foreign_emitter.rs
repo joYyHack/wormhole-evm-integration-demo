@@ -18,6 +18,6 @@ impl ForeignEmitter {
     pub const SEED_PREFIX: &'static [u8; 15] = b"foreign_emitter";
 
     pub fn verify(&self, address: &[u8; 32]) -> bool {
-        *address != self.address
+        *address == self.address
     }
 }

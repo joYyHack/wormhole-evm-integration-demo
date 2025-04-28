@@ -149,7 +149,7 @@ describe("messaging SVM -> EVM", () => {
     console.log("Initalized");
   });
 
-  it.skip("send message SVM -> EVM", async () => {
+  it("send message SVM -> EVM", async () => {
     const wh = await wormhole(ENV, [solana, evm]);
     const solanaChain = wh.getChain(SOLANA);
 
@@ -272,7 +272,11 @@ describe("messaging SVM -> EVM", () => {
 
     console.log("Sending message...");
 
-    if (false) {
+    let tx_evm: ethers.ContractTransactionResponse;
+    if (
+      !process.env.USE_EXISTING_TX ||
+      process.env.USE_EXISTING_TX === "false"
+    ) {
       const whEVMMessenger = new Contract(
         deploymentTx.contractAddress,
         whEVMMessengerAbi.abi,
@@ -281,40 +285,41 @@ describe("messaging SVM -> EVM", () => {
 
       const message = "Hello world: " + randomBytes(6).toString();
 
-      const tx_evm = await whEVMMessenger
-        .connect(evmPayer)
-        // @ts-ignore
-        .sendMessage(message, {
-          value: ethers.parseEther("0.1"),
-        });
+      tx_evm = (await whEVMMessenger.sendMessage(
+        message
+      )) as ethers.ContractTransactionResponse;
 
       await tx_evm.wait();
 
       console.log(`Transaction link: ${evmTxLink(tx_evm.hash)}`);
+      console.log("Message sent");
+    } else if (process.env.TX_HASH) {
+      console.log("Skipping message sending");
+      console.log("Using existing tx: ", process.env.TX_HASH);
+    } else {
+      console.error(
+        "Please set SEND_MESSAGE=true or provide a TX_HASH in your .env file"
+      );
     }
 
-    console.log("Message sent");
-
-    // console.log(
-    //   "tx status",
-    //   await wh.getTransactionStatus(
-    //     "0x01a03d502f8fc64f8104f252ab7402141dfbf4b6dd2fb0e1775be0848dda4b7d"
-    //   )
-    // );
-
     const [whm] = await sepoliaChain.parseTransaction(
-      "0x5a9fc8facd623956c5a44f2bbc3c7c7e8f3249c04d6b229df576ec57cc8ad824"
-      //tx_evm.hash
-      //"0x01a03d502f8fc64f8104f252ab7402141dfbf4b6dd2fb0e1775be0848dda4b7d"
+      tx_evm && tx_evm.hash ? tx_evm.hash : process.env.TX_HASH
     );
-
-    console.log("whm", whm);
 
     const vaa = await wh.getVaa(whm!, "Uint8Array", 100_000);
 
-    console.log("VAA", vaa);
-    console.log(vaa.emitterAddress.toString());
-    
+    if (!vaa) {
+      console.info(
+        "\nVaa is not yet available. Please wait around 15-20 minutes for message to be processed."
+      );
+      console.info(
+        "\nUse the provided tx in your .env file to process the existing tx: ",
+        tx_evm.hash
+      );
+
+      return;
+    }
+
     let configPda = PublicKey.findProgramAddressSync(
       [Buffer.from("config")],
       whSolanaMessenger.programId
@@ -334,12 +339,29 @@ describe("messaging SVM -> EVM", () => {
 
     console.log("Registering emitter...");
 
-    if (false) {
+    let foreignEmitterAddress: string | null;
+
+    try {
+      let _address: number[];
+      ({ address: _address } =
+        await whSolanaMessenger.account.foreignEmitter.fetch(
+          foreignEmitterPda[0]
+        ));
+
+      foreignEmitterAddress =
+        "0x" +
+        Array.from(_address)
+          .map((byte) => byte.toString(16).padStart(2, "0")) // Convert each byte to a 2-character hex string
+          .join("");
+    } catch {}
+
+    if (
+      foreignEmitterAddress === null ||
+      foreignEmitterAddress !== vaa.emitterAddress.toString()
+    ) {
       const registerEmitterTx = await whSolanaMessenger.methods
         .registerEmitter(chainToChainId(vaa.emitterChain), [
-          ...Buffer.from(
-            deploymentTx.contractAddress.replace("0x", "").padStart(64, "0")
-          ),
+          ...vaa.emitterAddress.toUint8Array(),
         ])
         .accounts({
           // @ts-ignore
@@ -356,9 +378,10 @@ describe("messaging SVM -> EVM", () => {
       );
 
       console.log(`Transaction link: ${solanatTxLink(registerEmitterSig)}`);
+      console.log("Emitter registered");
+    } else {
+      console.log("Emitter already registered");
     }
-
-    console.log("Emitter registered");
 
     console.log("Receiving message...");
 
@@ -384,29 +407,45 @@ describe("messaging SVM -> EVM", () => {
 
     await signSendWait(wh.getChain(SOLANA), verifyTxs, signer);
 
-    const tx_sol = await whSolanaMessenger.methods
-      .receiveMessage([...vaa.hash])
-      .accounts({
-        payer: solanaPayer.publicKey,
-        // @ts-ignore
-        config: configPda,
-        wormholeProgram: wormholeCoreAddress,
-        posted: utils.derivePostedVaaKey(
-          wormholeCoreAddress,
-          Buffer.from(vaa.hash)
-        ),
-        foreignEmitter: foreignEmitterPda[0],
-        received: receivedPda[0],
-      })
-      .transaction();
+    let message: string;
+    try {
+      let _message: Buffer<ArrayBufferLike>;
 
-    const txSig = await sendAndConfirmTransaction(
-      solanaProvider.connection,
-      tx_sol,
-      [solanaPayer]
-    );
+      ({ message: _message } = await whSolanaMessenger.account.received.fetch(
+        receivedPda[0]
+      ));
 
-    console.log(`Transaction link: ${solanatTxLink(txSig)}`);
-    console.log("Message received");
+      message = _message.toString();
+    } catch {}
+
+    if (!message) {
+      const tx_sol = await whSolanaMessenger.methods
+        .receiveMessage([...vaa.hash])
+        .accounts({
+          payer: solanaPayer.publicKey,
+          // @ts-ignore
+          config: configPda,
+          wormholeProgram: wormholeCoreAddress,
+          posted: utils.derivePostedVaaKey(
+            wormholeCoreAddress,
+            Buffer.from(vaa.hash)
+          ),
+          foreignEmitter: foreignEmitterPda[0],
+          received: receivedPda[0],
+        })
+        .transaction();
+
+      const txSig = await sendAndConfirmTransaction(
+        solanaProvider.connection,
+        tx_sol,
+        [solanaPayer]
+      );
+
+      console.log(`Transaction link: ${solanatTxLink(txSig)}`);
+      console.log("Message received");
+    } else {
+      console.log("Message was already received");
+      console.log("Message: ", message.toString());
+    }
   });
 });
