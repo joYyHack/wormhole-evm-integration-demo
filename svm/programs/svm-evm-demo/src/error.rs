@@ -2,7 +2,7 @@ use anchor_lang::prelude::error_code;
 
 #[error_code]
 /// Errors relevant to this program's malfunction.
-pub enum WhMessengerError {
+pub enum WhConnectorError {
     #[msg("InvalidWormholeConfig")]
     InvalidWormholeConfig,
 
@@ -27,6 +27,36 @@ pub enum WhMessengerError {
     #[msg("BumpNotFound")]
     BumpNotFound,
 
+    #[msg("NonExistentRelayerAta")]
+    NonExistentRelayerAta,
+
     #[msg("InvalidMessage")]
     InvalidMessage,
+
+    #[msg("InvalidPayerAta")]
+    InvalidPayerAta,
+
+    #[msg("InvalidRecipient")]
+    InvalidRecipient,
+
+    #[msg("InvalidTokenBridgeConfig")]
+    InvalidTokenBridgeConfig,
+
+    #[msg("InvalidTokenBridgeForeignEndpoint")]
+    InvalidTokenBridgeForeignEndpoint,
+
+    #[msg("InvalidTokenBridgeMintAuthority")]
+    InvalidTokenBridgeMintAuthority,
+
+    #[msg("InvalidTransferToAddress")]
+    InvalidTransferToAddress,
+
+    #[msg("InvalidTransferToChain")]
+    InvalidTransferToChain,
+
+    #[msg("InvalidTransferTokenChain")]
+    InvalidTransferTokenChain,
+
+    #[msg("AlreadyRedeemed")]
+    AlreadyRedeemed,
 }

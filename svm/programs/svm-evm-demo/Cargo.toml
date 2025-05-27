@@ -23,4 +23,7 @@ idl-build = ["anchor-lang/idl-build", "wormhole-anchor-sdk/idl-build"]
 [dependencies]
 anchor-lang = { workspace = true }
 wormhole-io = { workspace = true }
-wormhole-anchor-sdk = { path = "../../modules/wormhole-anchor-sdk", default-features = false }
+anchor-spl = { workspace = true }
+wormhole-anchor-sdk = { path = "../../modules/wormhole-anchor-sdk", default-features = false, features = [
+    "token-bridge",
+] }
