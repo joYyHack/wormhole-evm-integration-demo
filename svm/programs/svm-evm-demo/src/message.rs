@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::{AnchorDeserialize, AnchorSerialize};
 use std::io;
+use std::io::Read;
 use wormhole_anchor_sdk::token_bridge;
 use wormhole_io::Readable;
 
@@ -22,7 +23,7 @@ pub const WH_MESSAGE_MAX_LENGTH: usize = 512;
 //     Hello { message: Vec<u8> },
 // }
 
-#[derive(Clone, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone)]
 pub enum WhMessage {
     Data {
         recipient: [u8; 32],
@@ -91,15 +92,7 @@ impl AnchorSerialize for WhMessage {
                 slc_data,
             } => {
                 PAYLOAD_ID_HELLO.serialize(writer)?;
-                recipient.serialize(writer);
-
-                //                     (message.len() as u16).to_be_bytes().serialize(writer)?;
-                //                     for item in message {
-                //                         item.serialize(writer)?;
-                //                     }
-
-                let mut buf = vec![0; length];
-                reader.read_exact(&mut buf)?;
+                recipient.serialize(writer)?;
 
                 Ok(())
             }
@@ -110,13 +103,19 @@ impl AnchorSerialize for WhMessage {
 impl AnchorDeserialize for WhMessage {
     fn deserialize_reader<R: io::Read>(reader: &mut R) -> io::Result<Self> {
         match u8::read(reader)? {
-            PAYLOAD_ID_HELLO => Ok(WhMessage::Data {
+            0 => Ok(WhMessage::Data {
                 recipient: Readable::read(reader)?,
+                slc_data: vec![],
             }),
-            _ => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "invalid payload testetetetstetes",
-            )),
+            _ => {
+                let mut buf = vec![];
+                reader.read_to_end(&mut buf)?;
+                
+                Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!("invalid payload test 2, {:?}", buf),
+                ))
+            },
         }
     }
 }

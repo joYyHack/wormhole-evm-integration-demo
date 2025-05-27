@@ -217,7 +217,7 @@ impl AnchorDeserialize for TransferWithPayload {
 /// Token Bridge Transfer with generic payload type `P`. This data is found as
 /// the payload of a posted Wormhole message.
 pub struct TransferWith<P> {
-    meta: TransferHeader,
+    pub meta: TransferHeader,
     payload: P,
 }
 

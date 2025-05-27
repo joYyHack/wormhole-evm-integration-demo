@@ -274,13 +274,13 @@ pub struct RedeemTransferWithPayload<'info> {
 
     #[account(
         mut,
-        // seeds = [
-        //     token_bridge::WrappedMint::SEED_PREFIX,
-        //     &vaa.data().token_chain().to_be_bytes(),
-        //     vaa.data().token_address().as_ref()
-        // ],
-        // bump,
-        //seeds::program = token_bridge_program.key
+        seeds = [
+            token_bridge::WrappedMint::SEED_PREFIX,
+            &vaa.data().meta.token_chain.to_be_bytes(),
+            vaa.data().meta.token_address.as_ref()
+        ],
+        bump,
+        seeds::program = token_bridge_program.key
     )]
     /// Token Bridge wrapped mint info. This is the SPL token that will be
     /// bridged from the foreign contract. The wrapped mint PDA must agree

@@ -10,7 +10,7 @@ pub mod error;
 pub mod message;
 pub mod state;
 
-declare_id!("BSGdiV5Da29dicSZajTMyS87Ae9ph7sJjoQpYqUagbfG");
+declare_id!("UiJxwGxkmdD1m1AfmmNoB1ejh8mt9yWGYU5ghmA3Xuu");
 
 #[program]
 /// A Cross-Chain application. This contract uses Wormhole's
@@ -208,7 +208,7 @@ pub mod wh_connector {
 
         msg!("here2");
 
-        let amount = 100_00000000;
+        let amount = ctx.accounts.vaa.data().meta.amount;
         //ctx.accounts.vaa.data().amount();
 
         // If this instruction were executed by a relayer, send some of the
